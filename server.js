@@ -1,6 +1,11 @@
 const Path = require('path');
 const Hapi = require('hapi');
 const Inert = require('inert');
+const Vision = require('vision');
+
+require('env2')('./config.env');
+
+const routes = require('./routes');
 
 const server = new Hapi.Server({
     connections: {
@@ -13,19 +18,22 @@ const server = new Hapi.Server({
 });
 server.connection({ port: 3000 });
 
-server.register(Inert, () => {});
+server.register([Inert, Vision], () => {
 
-server.route({
-    method: 'GET',
-    path: '/{param*}',
-    handler: {
-        directory: {
-            path: '.',
-            redirectToSlash: true,
-            index: true
-        }
-    }
+    server.views({
+        engines: {
+            html: require('handlebars')
+        },
+        relativeTo: __dirname,
+        path: 'views',
+        layoutPath: 'views/layout',
+        layout: 'default',
+        partialsPath: 'views/partials',
+    });
+
+    server.route(routes);
 });
+
 
 server.start((err) => {
 
